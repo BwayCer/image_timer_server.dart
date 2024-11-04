@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計時動圖產生器</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+    <style>
+      :root {
+        --primary-color: #6200ee;
+        --surface-color: #ffffff;
+        --on-surface-color: #000000;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+      }
+
+      body {
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        box-sizing: border-box;
+        background-color: var(--surface-color);
+        box-shadow: 2px 0 8px var(--shadow-color);
+        padding: 1rem;
+        width: 300px;
+        transition: transform 0.3s ease;
+      }
+
+      .main-content {
+        flex: 1;
+        padding: 1rem;
+      }
+
+      .card {
+        background-color: var(--surface-color);
+        border-radius: 8px;
+        box-shadow: 0 2px 4px var(--shadow-color);
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .input-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: var(--on-surface-color);
+      }
+
+      .color-input {
+        width: 100%;
+        height: 48px;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      .time-input {
+        box-sizing: border-box;
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      .time-input:focus {
+        outline: 2px solid var(--primary-color);
+        border-color: var(--primary-color);
+      }
+
+      .slider {
+        width: 100%;
+        margin-top: 0.5rem;
+      }
+
+      .url-container {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .url-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f5f5f5;
+      }
+
+      .button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+      }
+
+      .button:hover {
+        background-color: #3700b3;
+      }
+
+      .toggle-sidebar {
+        display: none;
+        margin-bottom: 1.5rem;
+        z-index: 1000;
+      }
+
+      .preview-image {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
+      }
+
+      @media (max-width: 767.98px) {
+        .container {
+          flex-direction: column;
+        }
+
+        .sidebar {
+          width: 100%;
+          bottom: 0;
+          max-height: 100vh;
+          position: fixed;
+          left: 0;
+          overflow: auto;
+          z-index: 1000;
+          transform: translateY(calc(100% - 40px - 2rem));
+        }
+
+        .sidebar.open {
+          transform: translateY(0);
+        }
+
+        .toggle-sidebar {
+          display: block;
+          width: 100%;
+          height: 40px;
+          background-color: var(--primary-color);
+          color: white;
+          border: none;
+          border-radius: 4px 4px 0 0;
+        }
+
+        .main-content {
+          margin-bottom: 40px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <aside class="sidebar" id="sidebar">
+        <button class="toggle-sidebar" id="toggleSidebar">▲ 設定選項</button>
+        <div class="input-group">
+          <label for="timeInput">時間</label>
+          <input type="datetime-local" id="timeInput" class="time-input">
+        </div>
+        <div class="input-group">
+          <label for="pageColor">頁面顏色</label>
+          <input type="color" id="pageColor" class="color-input" value="#ffffff">
+        </div>
+        <div class="input-group">
+          <label for="bgColor">背景顏色</label>
+          <input type="color" id="bgColor" class="color-input" value="#141414">
+        </div>
+        <div class="input-group">
+          <label for="timeColor">時間顏色</label>
+          <input type="color" id="timeColor" class="color-input" value="#00ff00">
+        </div>
+        <div class="input-group">
+          <label for="textColor">文字顏色</label>
+          <input type="color" id="textColor" class="color-input" value="#ffffff">
+        </div>
+        <div class="input-group">
+          <label for="scale">大小 (1-26): <span id="scaleValue">6</span></label>
+          <input type="range" id="scale" class="slider" min="1" max="26" value="6">
+        </div>
+        <div class="input-group">
+          <label for="duration">持續時間 (1-60): <span id="durationValue">10</span></label>
+          <input type="range" id="duration" class="slider" min="1" max="60" value="10">
+        </div>
+        <button class="button" id="generate">生成</button>
+      </aside>
+
+      <main class="main-content">
+        <div class="card">
+          <div class="url-container">
+            <input type="text" id="urlOutput" class="url-input" readonly>
+            <button class="button" id="copyUrl">複製</button>
+          </div>
+        </div>
+        <div class="card">
+          <img id="previewImage" class="preview-image" src="" alt="Preview">
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const elemTimeInput = document.getElementById('timeInput');
+      const elemBgColor = document.getElementById('bgColor');
+      const elemTimeColor = document.getElementById('timeColor');
+      const elemTextColor = document.getElementById('textColor');
+      const elemScale = document.getElementById('scale');
+      const elemDuration = document.getElementById('duration');
+
+      const elemSidebar = document.getElementById('sidebar');
+      const elemUrlOutput = document.getElementById('urlOutput');
+      const elemPreviewImage = document.getElementById('previewImage');
+
+      // 設定時間
+      (() => {
+        var _ = new Date();
+        _.setHours(_.getHours() + 8);
+        elemTimeInput.min = _.toISOString().substring(0, 19);
+        _.setSeconds(_.getSeconds() + 86401);
+        elemTimeInput.value = _.toISOString().substring(0, 19);
+        _.setDate(_.getDate() + 99);
+        elemTimeInput.max = _.toISOString().substring(0, 19);
+      })();
+
+      // 監聽所有輸入變化
+      const inputs = document.querySelectorAll('input');
+      inputs.forEach(input => {
+        if (input.id === 'pageColor') {
+          input.addEventListener('input', function(evt) {
+            elemPreviewImage.parentNode.style.backgroundColor = evt.target.value;
+          });
+        } else {
+          if (['scale', 'duration'].includes(input.id)) {
+            input.addEventListener('input', function() {
+              if (this.type === 'range') {
+                document.getElementById(this.id + 'Value').textContent = this.value;
+              }
+            });
+          }
+          input.addEventListener('change', function() {
+            updateUrl();
+          });
+        }
+      });
+
+      // 更新URL和預覽圖
+      function updateUrl() {
+        const params = new URLSearchParams();
+        params.append('T', parseInt(new Date(elemTimeInput.value).getTime() / 1000));
+        params.append('C', elemScale.value);
+        params.append('D', elemDuration.value);
+        params.append('B', elemBgColor.value.replace('#', ''));
+        params.append('I', elemTimeColor.value.replace('#', ''));
+        params.append('E', elemTextColor.value.replace('#', ''));
+
+        const url = location.href + `timer?${params.toString()}`;
+        elemUrlOutput.value = url;
+        elemPreviewImage.src = url;
+      }
+
+      // 生成按鈕
+      document.getElementById('generate').addEventListener('click', updateUrl);
+
+      // 複製URL
+      document.getElementById('copyUrl').addEventListener('click', () => {
+        elemUrlOutput.select();
+        document.execCommand('copy');
+      });
+
+      // 側邊欄切換
+      document.getElementById('toggleSidebar').addEventListener('click', (evt) => {
+        elemSidebar.classList.toggle('open');
+          console.log(evt.target === this);
+        evt.target.textContent = elemSidebar.classList.contains('open') ? '▼ 設定選項' : '▲ 設定選項';
+      });
+
+      // 初始化
+      updateUrl();
+    </script>
+  </body>
+</html>
